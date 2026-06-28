@@ -7,12 +7,17 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Configurações do GitHub
+//-------------------------------------------------------------
+// CONFIGURAÇÕES DO GITHUB
+//-------------------------------------------------------------
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const repoOwner = "SaiyanWorldRPG";
 const repoName = "Pokemon-Ranking";
 const filePath = "ranking.json";
 
+//-------------------------------------------------------------
+// FUNÇÃO: Carrega ranking do GitHub
+//-------------------------------------------------------------
 async function loadRanking() {
   const url = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}`;
 
@@ -27,6 +32,9 @@ async function loadRanking() {
   return { json, sha };
 }
 
+//-------------------------------------------------------------
+// FUNÇÃO: Salva ranking no GitHub
+//-------------------------------------------------------------
 async function saveRanking(json, sha) {
   const url = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}`;
 
@@ -45,7 +53,9 @@ async function saveRanking(json, sha) {
   );
 }
 
-// POST /api/ranking — jogo envia ranking
+//-------------------------------------------------------------
+// POST /api/ranking — jogo envia score
+//-------------------------------------------------------------
 app.post("/api/ranking", async (req, res) => {
   try {
     const { player_id, player_name, score, timestamp } = req.body;
@@ -57,6 +67,7 @@ app.post("/api/ranking", async (req, res) => {
     const { json, sha } = await loadRanking();
 
     if (!json.players) json.players = {};
+
     json.players[player_id] = {
       player_id,
       player_name,
@@ -73,7 +84,9 @@ app.post("/api/ranking", async (req, res) => {
   }
 });
 
-// GET /api/ranking — bot do Discord consulta ranking
+//-------------------------------------------------------------
+// GET /api/ranking — jogo ou bot consulta ranking
+//-------------------------------------------------------------
 app.get("/api/ranking", async (req, res) => {
   try {
     const { json } = await loadRanking();
@@ -84,7 +97,10 @@ app.get("/api/ranking", async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 3000;
+//-------------------------------------------------------------
+// INICIAR SERVIDOR
+//-------------------------------------------------------------
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`Ranking API rodando na porta ${PORT}`);
 });
