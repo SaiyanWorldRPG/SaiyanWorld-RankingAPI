@@ -1,0 +1,29 @@
+name: Update Ranking
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"   # roda a cada 10 minutos
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar repositório
+        uses: actions/checkout@v3
+
+      - name: Instalar Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.1"
+
+      - name: Atualizar ranking
+        run: ruby update_ranking.rb
+
+      - name: Commit e Push
+        run: |
+          git config --global user.name "RankingBot"
+          git config --global user.email "bot@example.com"
+          git add .
+          git commit -m "Ranking atualizado automaticamente"
+          git push
