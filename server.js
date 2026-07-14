@@ -8,12 +8,12 @@ app.use(cors());
 app.use(express.json());
 
 //-------------------------------------------------------------
-// CONFIGURAÇÕES DO GITHUB
+// CONFIGURAÇÕES DO GITHUB (AGORA USANDO VARIÁVEIS DO RAILWAY)
 //-------------------------------------------------------------
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-const repoOwner = "SaiyanWorldRPG";
-const repoName = "Pokemon-Ranking";
-const filePath = "ranking.json";
+const repoOwner = process.env.REPO_OWNER;     // SaiyanWorldRPG
+const repoName = process.env.REPO_NAME;       // Pokemon-Ranking
+const filePath = process.env.FILE_PATH;       // ranking.json
 
 //-------------------------------------------------------------
 // FUNÇÃO: Carrega ranking do GitHub
@@ -69,6 +69,41 @@ app.post("/api/ranking", async (req, res) => {
     if (!json.players) json.players = {};
 
     json.players[player_id] = {
+      player_id,
+      player_name,
+      score,
+      timestamp: timestamp || new Date().toISOString()
+    };
+
+    await saveRanking(json, sha);
+
+    return res.json({ success: true });
+  } catch (e) {
+    console.error("Erro ao salvar ranking:", e.message);
+    return res.status(500).json({ error: "Erro interno" });
+  }
+});
+
+//-------------------------------------------------------------
+// GET /api/ranking — jogo ou bot consulta ranking
+//-------------------------------------------------------------
+app.get("/api/ranking", async (req, res) => {
+  try {
+    const { json } = await loadRanking();
+    return res.json(json);
+  } catch (e) {
+    console.error("Erro ao carregar ranking:", e.message);
+    return res.status(500).json({ error: "Erro interno" });
+  }
+});
+
+//-------------------------------------------------------------
+// INICIAR SERVIDOR
+//-------------------------------------------------------------
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+  console.log(`Ranking API rodando na porta ${PORT}`);
+});    json.players[player_id] = {
       player_id,
       player_name,
       score,
