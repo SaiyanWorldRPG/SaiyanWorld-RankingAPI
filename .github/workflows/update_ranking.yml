@@ -11,6 +11,8 @@ jobs:
     steps:
       - name: Baixar repositório
         uses: actions/checkout@v3
+        with:
+          persist-credentials: false
 
       - name: Instalar Ruby
         uses: ruby/setup-ruby@v1
