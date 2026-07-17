@@ -10,7 +10,11 @@ uri = URI(API_URL)
 response = Net::HTTP.get(uri)
 data = JSON.parse(response)
 
-players = data["players"].values
+# API retorna: { "players": { "id": {...}, ... } }
+players_hash = data["players"] || {}
+
+# Converte hash → array
+players = players_hash.values
 
 # Ordena por score
 players.sort_by! { |p| -p["score"].to_i }
