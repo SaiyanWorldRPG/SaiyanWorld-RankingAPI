@@ -8,15 +8,15 @@ app.use(cors());
 app.use(express.json());
 
 //-------------------------------------------------------------
-// CONFIGURAÇÕES DO GITHUB (USANDO VARIÁVEIS DO RAILWAY)
+// CONFIG GITHUB
 //-------------------------------------------------------------
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const repoOwner = process.env.REPO_OWNER;     // SaiyanWorldRPG
-const repoName = process.env.REPO_NAME;       // Pokemon-Ranking
+const repoName = process.env.REPO_NAME;       // SaiyanWorld-RankingAPI
 const filePath = process.env.FILE_PATH;       // ranking.json
 
 //-------------------------------------------------------------
-// FUNÇÃO: Carrega ranking do GitHub
+// Carrega ranking do GitHub
 //-------------------------------------------------------------
 async function loadRanking() {
   try {
@@ -38,7 +38,7 @@ async function loadRanking() {
 }
 
 //-------------------------------------------------------------
-// FUNÇÃO: Salva ranking no GitHub
+// Salva ranking no GitHub
 //-------------------------------------------------------------
 async function saveRanking(json, sha) {
   const url = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}`;
@@ -63,9 +63,12 @@ async function saveRanking(json, sha) {
 //-------------------------------------------------------------
 app.post("/api/ranking", async (req, res) => {
   try {
-    const { player_id, player_name, score, timestamp } = req.body;
+    console.log("Corpo recebido:", req.body);   // 🔥 LOG PRA VER O QUE CHEGA
+
+    const { player_id, player_name, score, outfit, timestamp } = req.body;
 
     if (!player_id || !player_name || !score) {
+      console.log("Dados inválidos:", req.body);
       return res.status(400).json({ error: "Dados inválidos" });
     }
 
@@ -77,11 +80,13 @@ app.post("/api/ranking", async (req, res) => {
       player_id,
       player_name,
       score,
+      outfit: outfit || 0,
       timestamp: timestamp || new Date().toISOString()
     };
 
     await saveRanking(json, sha);
 
+    console.log("Ranking salvo para:", player_id);
     return res.json({ success: true });
   } catch (e) {
     console.error("Erro ao salvar ranking:", e.message);
@@ -90,7 +95,7 @@ app.post("/api/ranking", async (req, res) => {
 });
 
 //-------------------------------------------------------------
-// GET /api/ranking — jogo ou bot consulta ranking
+// GET /api/ranking — jogo consulta ranking
 //-------------------------------------------------------------
 app.get("/api/ranking", async (req, res) => {
   try {
