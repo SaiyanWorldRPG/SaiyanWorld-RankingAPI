@@ -16,36 +16,37 @@ const repoName = process.env.REPO_NAME;       // SaiyanWorld-RankingAPI
 const filePath = process.env.FILE_PATH;       // ranking.json
 
 //-------------------------------------------------------------
-// Carrega ranking do GitHub
+// FUNÇÃO: Carregar ranking do GitHub
 //-------------------------------------------------------------
 async function loadRanking() {
-  try {
-    const url = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}`;
+  const url = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}`;
 
+  try {
     const response = await axios.get(url, {
       headers: { Authorization: `token ${GITHUB_TOKEN}` }
     });
 
     const sha = response.data.sha;
     const content = Buffer.from(response.data.content, "base64").toString();
-    const json = content ? JSON.parse(content) : { players: {} };
+    const json = JSON.parse(content);
 
+    console.log("Ranking carregado do GitHub.");
     return { json, sha };
+
   } catch (e) {
-    console.error("Erro ao carregar ranking:", e.message);
+    console.log("Arquivo não existe no GitHub. Será criado.");
     return { json: { players: {} }, sha: null };
   }
 }
 
 //-------------------------------------------------------------
-// Salva ranking no GitHub (CORRIGIDO)
+// FUNÇÃO: Salvar ranking no GitHub (FUNCIONANDO)
 //-------------------------------------------------------------
 async function saveRanking(json, sha) {
   const url = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}`;
 
   const newContent = Buffer.from(JSON.stringify(json, null, 2)).toString("base64");
 
-  // Corpo do PUT
   const body = {
     message: "Atualizar ranking global",
     content: newContent
@@ -56,9 +57,18 @@ async function saveRanking(json, sha) {
     body.sha = sha;
   }
 
-  return axios.put(url, body, {
-    headers: { Authorization: `token ${GITHUB_TOKEN}` }
-  });
+  try {
+    const response = await axios.put(url, body, {
+      headers: { Authorization: `token ${GITHUB_TOKEN}` }
+    });
+
+    console.log("Ranking atualizado no GitHub.");
+    return response.data;
+
+  } catch (e) {
+    console.error("Erro ao salvar no GitHub:", e.response?.data || e.message);
+    throw e;
+  }
 }
 
 //-------------------------------------------------------------
@@ -77,8 +87,6 @@ app.post("/api/ranking", async (req, res) => {
 
     const { json, sha } = await loadRanking();
 
-    if (!json.players) json.players = {};
-
     json.players[player_id] = {
       player_id,
       player_name,
@@ -91,6 +99,7 @@ app.post("/api/ranking", async (req, res) => {
 
     console.log("Ranking salvo para:", player_id);
     return res.json({ success: true });
+
   } catch (e) {
     console.error("Erro ao salvar ranking:", e.message);
     return res.status(500).json({ error: "Erro interno" });
