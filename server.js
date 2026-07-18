@@ -38,24 +38,27 @@ async function loadRanking() {
 }
 
 //-------------------------------------------------------------
-// Salva ranking no GitHub
+// Salva ranking no GitHub (CORRIGIDO)
 //-------------------------------------------------------------
 async function saveRanking(json, sha) {
   const url = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}`;
 
   const newContent = Buffer.from(JSON.stringify(json, null, 2)).toString("base64");
 
-  return axios.put(
-    url,
-    {
-      message: "Atualizar ranking global",
-      content: newContent,
-      sha: sha
-    },
-    {
-      headers: { Authorization: `token ${GITHUB_TOKEN}` }
-    }
-  );
+  // Corpo do PUT
+  const body = {
+    message: "Atualizar ranking global",
+    content: newContent
+  };
+
+  // Só envia SHA se existir
+  if (sha) {
+    body.sha = sha;
+  }
+
+  return axios.put(url, body, {
+    headers: { Authorization: `token ${GITHUB_TOKEN}` }
+  });
 }
 
 //-------------------------------------------------------------
@@ -63,7 +66,7 @@ async function saveRanking(json, sha) {
 //-------------------------------------------------------------
 app.post("/api/ranking", async (req, res) => {
   try {
-    console.log("Corpo recebido:", req.body);   // 🔥 LOG PRA VER O QUE CHEGA
+    console.log("Corpo recebido:", req.body);
 
     const { player_id, player_name, score, outfit, timestamp } = req.body;
 
