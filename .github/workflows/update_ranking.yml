@@ -14,6 +14,12 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Garantir que ranking.json existe
+        run: |
+          if [ ! -f ranking.json ]; then
+            echo '{ "players": {} }' > ranking.json
+          fi
+
       - name: Instalar Ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -26,7 +32,7 @@ jobs:
         run: |
           git config --global user.name "RankingBot"
           git config --global user.email "bot@example.com"
-          git add .
+          git add ranking.json
           git commit -m "Ranking atualizado automaticamente" || echo "Nada para commitar"
           git push https://$GH_TOKEN@github.com/SaiyanWorldRPG/SaiyanWorld-RankingAPI.git HEAD:main
         env:
